@@ -20,7 +20,7 @@ function Skills() {
     async function loadSkills() {
         try {
             const response = await fetch(
-                'http://localhost:5000/api/skills'
+                '/api/skills'
             )
 
             const data = await response.json()
@@ -87,7 +87,7 @@ function Skills() {
 
         try {
             const response = await fetch(
-                'http://localhost:5000/api/requests',
+                '/api/requests',
                 {
                     method: 'POST',
                     headers: {

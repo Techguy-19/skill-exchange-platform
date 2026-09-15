@@ -26,7 +26,7 @@ function Profile() {
     async function loadMySkills(userId) {
         try {
             const response = await fetch(
-                'http://localhost:5000/api/skills'
+                '/api/skills'
             )
 
             const data = await response.json()
@@ -52,7 +52,7 @@ function Profile() {
 
         try {
             const response = await fetch(
-                'http://localhost:5000/api/skills',
+                '/api/skills',
                 {
                     method: 'POST',
                     headers: {
@@ -99,7 +99,7 @@ function Profile() {
 
         try {
             const response = await fetch(
-                `http://localhost:5000/api/skills/${id}`,
+                `/api/skills/${id}`,
                 {
                     method: 'DELETE',
                     headers: {
@@ -147,7 +147,7 @@ function Profile() {
 
         try {
             const response = await fetch(
-                `http://localhost:5000/api/skills/${id}`,
+                `/api/skills/${id}`,
                 {
                     method: 'PUT',
                     headers: {

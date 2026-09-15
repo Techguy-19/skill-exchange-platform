@@ -14,7 +14,7 @@ function Requests() {
 
         try {
             const response = await fetch(
-                'http://localhost:5000/api/requests',
+                '/api/requests',
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -43,7 +43,7 @@ function Requests() {
     async function updateStatus(id, status) {
         try {
             const response = await fetch(
-                `http://localhost:5000/api/requests/${id}/status`,
+                `/api/requests/${id}/status`,
                 {
                     method: 'PUT',
                     headers: {

@@ -14,7 +14,7 @@ function UserProfile() {
     async function loadUserProfile() {
         try {
             const response = await fetch(
-                'http://localhost:5000/api/skills'
+                '/api/skills'
             )
 
             const data = await response.json()
