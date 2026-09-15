@@ -1,24 +1,50 @@
-
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Popup from '../components/Popup'
 
 function Skills() {
+
     const [skills, setSkills] = useState([])
+
     const [mySkills, setMySkills] = useState([])
+
     const [search, setSearch] = useState('')
 
     const [selectedSkill, setSelectedSkill] = useState(null)
+
     const [offeredSkillId, setOfferedSkillId] = useState('')
 
+    const [popup, setPopup] = useState({
+        isOpen: false,
+        type: 'info',
+        title: '',
+        message: '',
+        confirmText: 'OK',
+        cancelText: 'Cancel',
+        showCancel: false,
+        onConfirm: null,
+        onCancel: null
+    })
+
     const currentUser = JSON.parse(localStorage.getItem('user'))
+
     const navigate = useNavigate()
 
     useEffect(() => {
         loadSkills()
     }, [])
 
+    function closePopup() {
+        setPopup(prev => ({
+            ...prev,
+            isOpen: false
+        }))
+    }
+
     async function loadSkills() {
+
         try {
+
             const response = await fetch(
                 '/api/skills'
             )
@@ -26,53 +52,131 @@ function Skills() {
             const data = await response.json()
 
             if (!response.ok) {
-                alert(data.error)
+
+                setPopup({
+                    isOpen: true,
+                    type: 'error',
+                    title: 'Unable to Load Skills',
+                    message: data.error || 'Unable to load skills.',
+                    confirmText: 'OK',
+                    cancelText: 'Cancel',
+                    showCancel: false,
+                    onConfirm: closePopup,
+                    onCancel: closePopup
+                })
+
                 return
             }
 
             setSkills(data)
 
             if (currentUser) {
+
                 const ownSkills = data.filter(
                     (skill) => skill.user_id === currentUser.id
                 )
 
                 setMySkills(ownSkills)
+
             }
 
         } catch (error) {
+
             console.error('Error fetching skills:', error)
+
         }
+
     }
 
     function openExchange(skill) {
+
         if (!currentUser) {
-            alert('Please login first')
+
+            setPopup({
+                isOpen: true,
+                type: 'warning',
+                title: 'Login Required',
+                message: 'Please login first to request a skill exchange.',
+                confirmText: 'Login',
+                cancelText: 'Cancel',
+                showCancel: true,
+                onConfirm: () => {
+                    closePopup()
+                    navigate('/login')
+                },
+                onCancel: closePopup
+            })
+
             return
         }
 
         if (skill.user_id === currentUser.id) {
-            alert('You cannot request your own skill')
+
+            setPopup({
+                isOpen: true,
+                type: 'warning',
+                title: 'Your Own Skill',
+                message: 'You cannot request your own skill.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
             return
         }
 
         if (mySkills.length === 0) {
-            alert('Please add a skill to your profile first')
+
+            setPopup({
+                isOpen: true,
+                type: 'info',
+                title: 'Add a Skill First',
+                message: 'Please add a skill to your profile before requesting an exchange.',
+                confirmText: 'Go to Profile',
+                cancelText: 'Cancel',
+                showCancel: true,
+                onConfirm: () => {
+                    closePopup()
+                    navigate('/profile')
+                },
+                onCancel: closePopup
+            })
+
             return
         }
 
         setSelectedSkill(skill)
+
         setOfferedSkillId('')
+
     }
 
     function closeExchange() {
+
         setSelectedSkill(null)
+
         setOfferedSkillId('')
+
     }
 
     async function sendRequest() {
+
         if (!offeredSkillId) {
-            alert('Please select a skill to offer')
+
+            setPopup({
+                isOpen: true,
+                type: 'warning',
+                title: 'Select a Skill',
+                message: 'Please select a skill to offer.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
             return
         }
 
@@ -81,11 +185,24 @@ function Skills() {
         )
 
         if (!offeredSkill) {
-            alert('Invalid skill selected')
+
+            setPopup({
+                isOpen: true,
+                type: 'error',
+                title: 'Invalid Skill',
+                message: 'The selected skill is invalid. Please select another skill.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
             return
         }
 
         try {
+
             const response = await fetch(
                 '/api/requests',
                 {
@@ -105,20 +222,54 @@ function Skills() {
             const data = await response.json()
 
             if (!response.ok) {
-                alert(data.error)
+
+                setPopup({
+                    isOpen: true,
+                    type: 'error',
+                    title: 'Request Failed',
+                    message: data.error || 'Unable to send exchange request.',
+                    confirmText: 'OK',
+                    cancelText: 'Cancel',
+                    showCancel: false,
+                    onConfirm: closePopup,
+                    onCancel: closePopup
+                })
+
                 return
             }
 
-            alert(
-                `Request sent successfully!\n\nYou offer: ${offeredSkill.name}\nYou want: ${selectedSkill.name}`
-            )
-
             closeExchange()
 
+            setPopup({
+                isOpen: true,
+                type: 'success',
+                title: 'Exchange Request Sent',
+                message: `Request sent successfully!\n\nYou offer: ${offeredSkill.name}\nYou want: ${selectedSkill.name}`,
+                confirmText: 'Great',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
         } catch (error) {
+
             console.error('Error sending request:', error)
-            alert('Unable to connect to server')
+
+            setPopup({
+                isOpen: true,
+                type: 'error',
+                title: 'Connection Error',
+                message: 'Unable to connect to server. Please try again.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
         }
+
     }
 
     const filteredSkills = skills.filter((skill) =>
@@ -127,6 +278,7 @@ function Skills() {
     )
 
     return (
+
         <main className="skills-page">
 
             {/* HERO */}
@@ -195,12 +347,14 @@ function Skills() {
                     />
 
                     {search && (
+
                         <button
                             className="clear-search"
                             onClick={() => setSearch('')}
                         >
                             ×
                         </button>
+
                     )}
 
                 </div>
@@ -208,6 +362,7 @@ function Skills() {
                 <div className="skills-result-info">
 
                     <div>
+
                         <strong>
                             {filteredSkills.length}
                         </strong>
@@ -217,12 +372,15 @@ function Skills() {
                                 ? ' skill available'
                                 : ' skills available'}
                         </span>
+
                     </div>
 
                     {search && (
+
                         <span className="search-result-text">
                             Results for "{search}"
                         </span>
+
                     )}
 
                 </div>
@@ -267,6 +425,7 @@ function Skills() {
                                 skill.user_id === currentUser.id
 
                             return (
+
                                 <article
                                     className="modern-skill-card"
                                     key={skill.id}
@@ -275,6 +434,7 @@ function Skills() {
                                     <div className="skill-card-top">
 
                                         <div className="skill-icon">
+
                                             {skill.category
                                                 ?.toLowerCase()
                                                 .includes('program')
@@ -292,6 +452,7 @@ function Skills() {
                                                             .includes('ai')
                                                             ? '🤖'
                                                             : '✨'}
+
                                         </div>
 
                                         <span className="skill-category">
@@ -317,9 +478,11 @@ function Skills() {
                                     <div className="skill-owner">
 
                                         <div className="owner-avatar">
+
                                             {skill.user?.name
                                                 ?.charAt(0)
                                                 .toUpperCase() || '?'}
+
                                         </div>
 
                                         <div className="owner-info">
@@ -329,25 +492,46 @@ function Skills() {
                                             </span>
 
                                             {skill.user ? (
+
                                                 <button
                                                     className="owner-name"
                                                     onClick={() => {
+
                                                         if (!currentUser) {
-                                                            alert('Please login first')
+
+                                                            setPopup({
+                                                                isOpen: true,
+                                                                type: 'warning',
+                                                                title: 'Login Required',
+                                                                message: 'Please login first to view student profiles.',
+                                                                confirmText: 'Login',
+                                                                cancelText: 'Cancel',
+                                                                showCancel: true,
+                                                                onConfirm: () => {
+                                                                    closePopup()
+                                                                    navigate('/login')
+                                                                },
+                                                                onCancel: closePopup
+                                                            })
+
                                                             return
                                                         }
 
                                                         navigate(
                                                             `/user/${skill.user.id}`
                                                         )
+
                                                     }}
                                                 >
                                                     {skill.user.name}
                                                 </button>
+
                                             ) : (
+
                                                 <strong>
                                                     Unknown
                                                 </strong>
+
                                             )}
 
                                         </div>
@@ -380,10 +564,13 @@ function Skills() {
                                     </div>
 
                                 </article>
+
                             )
+
                         })}
 
                     </div>
+
                 )}
 
             </section>
@@ -527,11 +714,28 @@ function Skills() {
                     </div>
 
                 </div>
+
             )}
 
+
+            {/* CUSTOM POPUP */}
+
+            <Popup
+                isOpen={popup.isOpen}
+                type={popup.type}
+                title={popup.title}
+                message={popup.message}
+                confirmText={popup.confirmText}
+                cancelText={popup.cancelText}
+                showCancel={popup.showCancel}
+                onConfirm={popup.onConfirm || closePopup}
+                onCancel={popup.onCancel || closePopup}
+            />
+
         </main>
+
     )
+
 }
 
 export default Skills
-

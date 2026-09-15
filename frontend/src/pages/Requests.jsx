@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Popup from '../components/Popup'
 
 function Requests() {
 
@@ -9,8 +10,27 @@ function Requests() {
     const [requests, setRequests] = useState([])
     const [selectedRequest, setSelectedRequest] = useState(null)
 
+    const [popup, setPopup] = useState({
+        isOpen: false,
+        type: 'info',
+        title: '',
+        message: '',
+        confirmText: 'OK',
+        cancelText: 'Cancel',
+        showCancel: false,
+        onConfirm: null,
+        onCancel: null
+    })
+
     const currentUser = JSON.parse(localStorage.getItem('user'))
     const token = localStorage.getItem('token')
+
+    function closePopup() {
+        setPopup(prev => ({
+            ...prev,
+            isOpen: false
+        }))
+    }
 
     async function loadRequests() {
 
@@ -32,7 +52,18 @@ function Requests() {
             const data = await response.json()
 
             if (!response.ok) {
-                alert(data.error)
+
+                setPopup({
+                    isOpen: true,
+                    type: 'error',
+                    title: 'Unable to Load Requests',
+                    message: data.error || 'Failed to load requests.',
+                    confirmText: 'OK',
+                    showCancel: false,
+                    onConfirm: closePopup,
+                    onCancel: closePopup
+                })
+
                 return
             }
 
@@ -49,8 +80,7 @@ function Requests() {
                 }))
             )
 
-            // IMPORTANT:
-            // Request cards ko display karne ke liye ye required hai
+            // Request cards ko display karne ke liye required
             setRequests(data)
 
         } catch (error) {
@@ -60,6 +90,16 @@ function Requests() {
                 error
             )
 
+            setPopup({
+                isOpen: true,
+                type: 'error',
+                title: 'Connection Error',
+                message: 'Unable to connect to server. Please try again.',
+                confirmText: 'OK',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
         }
     }
 
@@ -75,12 +115,10 @@ function Requests() {
                 `/api/requests/${id}/status`,
                 {
                     method: 'PUT',
-
                     headers: {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`
                     },
-
                     body: JSON.stringify({
                         status
                     })
@@ -90,19 +128,42 @@ function Requests() {
             const data = await response.json()
 
             if (!response.ok) {
-                alert(data.error)
+
+                setPopup({
+                    isOpen: true,
+                    type: 'error',
+                    title: 'Unable to Update Request',
+                    message: data.error || 'Failed to update request.',
+                    confirmText: 'OK',
+                    showCancel: false,
+                    onConfirm: closePopup,
+                    onCancel: closePopup
+                })
+
                 return
             }
 
-            alert(
-                status === 'accepted'
-                    ? 'Request accepted successfully'
-                    : 'Request rejected successfully'
-            )
-
             setSelectedRequest(null)
 
-            loadRequests()
+            setPopup({
+                isOpen: true,
+                type: 'success',
+                title:
+                    status === 'accepted'
+                        ? 'Request Accepted'
+                        : 'Request Rejected',
+                message:
+                    status === 'accepted'
+                        ? 'The skill exchange request has been accepted successfully.'
+                        : 'The skill exchange request has been rejected successfully.',
+                confirmText: 'Continue',
+                showCancel: false,
+                onConfirm: () => {
+                    closePopup()
+                    loadRequests()
+                },
+                onCancel: closePopup
+            })
 
         } catch (error) {
 
@@ -111,8 +172,16 @@ function Requests() {
                 error
             )
 
-            alert('Unable to connect to server')
-
+            setPopup({
+                isOpen: true,
+                type: 'error',
+                title: 'Connection Error',
+                message: 'Unable to connect to server. Please try again.',
+                confirmText: 'OK',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
         }
     }
 
@@ -145,7 +214,6 @@ function Requests() {
     if (!currentUser) {
 
         return (
-
             <main className="requests-page">
 
                 <section className="requests-login-state">
@@ -171,11 +239,9 @@ function Requests() {
                     </p>
 
                     <a href="/login">
-
                         <button className="requests-login-btn">
                             Login to Continue →
                         </button>
-
                     </a>
 
                 </section>
@@ -400,11 +466,9 @@ function Requests() {
                         </p>
 
                         <a href="/skills">
-
                             <button className="browse-skills-btn">
                                 Explore Skills →
                             </button>
-
                         </a>
 
                     </div>
@@ -627,16 +691,11 @@ function Requests() {
                                         </div>
 
 
-                                        {/* Accept/Reject intentionally
-                                            removed from card */}
-
                                         {isSender &&
                                             request.status === 'pending' && (
 
                                                 <div className="waiting-badge">
-
                                                     ⏳ Waiting for response
-
                                                 </div>
 
                                             )}
@@ -646,7 +705,6 @@ function Requests() {
                                 </article>
 
                             )
-
                         })}
 
                     </div>
@@ -692,70 +750,52 @@ function Requests() {
 
 
                         <p>
-
                             <strong>
                                 From:
                             </strong>{' '}
-
                             {selectedRequest.sender.name}
-
                         </p>
 
 
                         <p>
-
                             <strong>
                                 To:
                             </strong>{' '}
-
                             {selectedRequest.receiver.name}
-
                         </p>
 
 
                         <p>
-
                             <strong>
                                 Offering:
                             </strong>{' '}
-
                             {selectedRequest.offered_skill.name}
-
                         </p>
 
 
                         <p>
-
                             <strong>
                                 Requesting:
                             </strong>{' '}
-
                             {selectedRequest.requested_skill.name}
-
                         </p>
 
 
                         <p>
-
                             <strong>
                                 Status:
                             </strong>{' '}
-
                             {selectedRequest.status}
-
                         </p>
 
 
                         <p>
-
                             <strong>
                                 Sent:
                             </strong>{' '}
-
                             {new Date(
                                 selectedRequest.created_at
                             ).toLocaleString()}
-
                         </p>
 
 
@@ -874,12 +914,15 @@ function Requests() {
 
 
                                 if (chatHidden) {
+
                                     return (
+
                                         <div className="chat-hidden-section">
 
                                             <div className="chat-hidden-message">
                                                 🔕 Chat hidden
                                             </div>
+
 
                                             <button
                                                 className="unhide-chat-btn"
@@ -887,47 +930,61 @@ function Requests() {
 
                                                     try {
 
-                                                        const response = await fetch(
-                                                            `/api/messages/${selectedRequest.id}/unhide`,
-                                                            {
-                                                                method: 'PUT',
-                                                                headers: {
-                                                                    Authorization: `Bearer ${token}`
+                                                        const response =
+                                                            await fetch(
+                                                                `/api/messages/${selectedRequest.id}/unhide`,
+                                                                {
+                                                                    method: 'PUT',
+                                                                    headers: {
+                                                                        Authorization: `Bearer ${token}`
+                                                                    }
                                                                 }
-                                                            }
-                                                        )
+                                                            )
 
-                                                        const data = await response.json()
+                                                        const data =
+                                                            await response.json()
 
                                                         if (!response.ok) {
+
                                                             throw new Error(
-                                                                data.error || 'Failed to unhide chat'
+                                                                data.error ||
+                                                                'Failed to unhide chat'
                                                             )
                                                         }
 
+
                                                         // Update current request
+
                                                         setSelectedRequest(prev => ({
+
                                                             ...prev,
+
                                                             sender_chat_hidden:
                                                                 isSender
                                                                     ? false
                                                                     : prev.sender_chat_hidden,
+
                                                             receiver_chat_hidden:
                                                                 isSender
                                                                     ? prev.receiver_chat_hidden
                                                                     : false
+
                                                         }))
 
+
                                                         // Update request list
+
                                                         setRequests(prev =>
                                                             prev.map(request =>
                                                                 request.id === selectedRequest.id
                                                                     ? {
                                                                         ...request,
+
                                                                         sender_chat_hidden:
                                                                             isSender
                                                                                 ? false
                                                                                 : request.sender_chat_hidden,
+
                                                                         receiver_chat_hidden:
                                                                             isSender
                                                                                 ? request.receiver_chat_hidden
@@ -939,7 +996,16 @@ function Requests() {
 
                                                     } catch (error) {
 
-                                                        alert(error.message)
+                                                        setPopup({
+                                                            isOpen: true,
+                                                            type: 'error',
+                                                            title: 'Unable to Unhide Chat',
+                                                            message: error.message,
+                                                            confirmText: 'OK',
+                                                            showCancel: false,
+                                                            onConfirm: closePopup,
+                                                            onCancel: closePopup
+                                                        })
 
                                                     }
 
@@ -949,9 +1015,9 @@ function Requests() {
                                             </button>
 
                                         </div>
+
                                     )
                                 }
-
 
 
                                 return (
@@ -987,8 +1053,26 @@ function Requests() {
 
             )}
 
+
+            {/* =========================================
+                CUSTOM POPUP
+            ========================================= */}
+
+            <Popup
+                isOpen={popup.isOpen}
+                type={popup.type}
+                title={popup.title}
+                message={popup.message}
+                confirmText={popup.confirmText}
+                cancelText={popup.cancelText}
+                showCancel={popup.showCancel}
+                onConfirm={popup.onConfirm || closePopup}
+                onCancel={popup.onCancel || closePopup}
+            />
+
         </main>
     )
 }
 
 export default Requests
+

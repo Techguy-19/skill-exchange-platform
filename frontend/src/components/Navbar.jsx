@@ -1,10 +1,19 @@
-
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Popup from './Popup'
 
 function Navbar() {
     const navigate = useNavigate()
     const [menuOpen, setMenuOpen] = useState(false)
+
+    const [popup, setPopup] = useState({
+        isOpen: false,
+        type: 'info',
+        title: '',
+        message: '',
+        confirmText: 'OK',
+        onConfirm: null
+    })
 
     const user = JSON.parse(localStorage.getItem('user'))
 
@@ -12,80 +21,106 @@ function Navbar() {
         setMenuOpen(false)
     }
 
+    function closePopup() {
+        setPopup(prev => ({
+            ...prev,
+            isOpen: false
+        }))
+    }
+
     function handleLogout() {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
 
-        alert('Logged out successfully')
-
         closeMenu()
-        navigate('/login')
-        window.location.reload()
+
+        setPopup({
+            isOpen: true,
+            type: 'success',
+            title: 'Logged Out',
+            message: 'You have been logged out successfully.',
+            confirmText: 'Continue',
+            onConfirm: () => {
+                closePopup()
+                navigate('/login')
+                window.location.reload()
+            }
+        })
     }
 
     return (
-        <nav className="navbar">
+        <>
+            <nav className="navbar">
 
-            <Link
-                to="/"
-                className="navbar-logo"
-                onClick={closeMenu}
-            >
-                <span>Skill</span> Exchange
-            </Link>
-
-            <button
-                className={`menu-toggle ${menuOpen ? 'active' : ''}`}
-                onClick={() => setMenuOpen(!menuOpen)}
-                aria-label="Toggle navigation"
-                aria-expanded={menuOpen}
-            >
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-
-            <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
-
-                <Link to="/" onClick={closeMenu}>
-                    Home
+                <Link
+                    to="/"
+                    className="navbar-logo"
+                    onClick={closeMenu}
+                >
+                    <span>Skill</span> Exchange
                 </Link>
 
-                <Link to="/skills" onClick={closeMenu}>
-                    Explore Skills
-                </Link>
+                <button
+                    className={`menu-toggle ${menuOpen ? 'active' : ''}`}
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    aria-label="Toggle navigation"
+                    aria-expanded={menuOpen}
+                >
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
 
-                <Link to="/requests" onClick={closeMenu}>
-                    Requests
-                </Link>
+                <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
 
-                {user ? (
-                    <>
-                        <Link to="/profile" onClick={closeMenu}>
-                            {user.name}
-                        </Link>
+                    <Link to="/" onClick={closeMenu}>
+                        Home
+                    </Link>
 
-                        <button onClick={handleLogout}>
-                            Logout
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <Link to="/login" onClick={closeMenu}>
-                            Login
-                        </Link>
+                    <Link to="/skills" onClick={closeMenu}>
+                        Explore Skills
+                    </Link>
 
-                        <Link to="/register" onClick={closeMenu}>
-                            Register
-                        </Link>
-                    </>
-                )}
+                    <Link to="/requests" onClick={closeMenu}>
+                        Requests
+                    </Link>
 
-            </div>
+                    {user ? (
+                        <>
+                            <Link to="/profile" onClick={closeMenu}>
+                                {user.name}
+                            </Link>
 
-        </nav>
+                            <button onClick={handleLogout}>
+                                Logout
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/login" onClick={closeMenu}>
+                                Login
+                            </Link>
+
+                            <Link to="/register" onClick={closeMenu}>
+                                Register
+                            </Link>
+                        </>
+                    )}
+
+                </div>
+
+            </nav>
+
+            <Popup
+                isOpen={popup.isOpen}
+                type={popup.type}
+                title={popup.title}
+                message={popup.message}
+                confirmText={popup.confirmText}
+                onConfirm={popup.onConfirm || closePopup}
+            />
+        </>
     )
 }
 
 export default Navbar
-

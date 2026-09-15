@@ -1,6 +1,7 @@
 
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Popup from '../components/Popup'
 
 function Login() {
     const navigate = useNavigate()
@@ -8,11 +9,34 @@ function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
+    const [popup, setPopup] = useState({
+        isOpen: false,
+        type: 'info',
+        title: '',
+        message: '',
+        confirmText: 'OK',
+        onConfirm: null
+    })
+
+    function closePopup() {
+        setPopup(prev => ({
+            ...prev,
+            isOpen: false
+        }))
+    }
+
     async function handleSubmit(e) {
         e.preventDefault()
 
         if (email === '' || password === '') {
-            alert('Please enter email and password')
+            setPopup({
+                isOpen: true,
+                type: 'warning',
+                title: 'Missing Information',
+                message: 'Please enter email and password.',
+                confirmText: 'OK',
+                onConfirm: closePopup
+            })
             return
         }
 
@@ -34,24 +58,46 @@ function Login() {
             const data = await response.json()
 
             if (!response.ok) {
-                alert(data.error)
+                setPopup({
+                    isOpen: true,
+                    type: 'error',
+                    title: 'Login Failed',
+                    message: data.error || 'Invalid email or password.',
+                    confirmText: 'Try Again',
+                    onConfirm: closePopup
+                })
                 return
             }
 
             localStorage.setItem('token', data.token)
             localStorage.setItem('user', JSON.stringify(data.user))
 
-            alert('Login successful')
-
             setEmail('')
             setPassword('')
 
-            navigate('/profile')
-        
+            setPopup({
+                isOpen: true,
+                type: 'success',
+                title: 'Login Successful',
+                message: 'Welcome back! You are now logged in.',
+                confirmText: 'Continue',
+                onConfirm: () => {
+                    closePopup()
+                    navigate('/profile')
+                }
+            })
 
         } catch (error) {
             console.error('Login error:', error)
-            alert('Unable to connect to server')
+
+            setPopup({
+                isOpen: true,
+                type: 'error',
+                title: 'Connection Error',
+                message: 'Unable to connect to server. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closePopup
+            })
         }
     }
 
@@ -182,6 +228,15 @@ function Login() {
                 </div>
 
             </section>
+
+            <Popup
+                isOpen={popup.isOpen}
+                type={popup.type}
+                title={popup.title}
+                message={popup.message}
+                confirmText={popup.confirmText}
+                onConfirm={popup.onConfirm || closePopup}
+            />
 
         </main>
     )

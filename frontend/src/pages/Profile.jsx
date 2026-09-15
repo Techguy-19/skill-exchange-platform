@@ -1,30 +1,58 @@
-
 import { useEffect, useState } from 'react'
+import Popup from '../components/Popup'
 
 function Profile() {
+
     const [user, setUser] = useState(null)
+
     const [mySkills, setMySkills] = useState([])
 
     const [skillName, setSkillName] = useState('')
+
     const [category, setCategory] = useState('')
+
     const [description, setDescription] = useState('')
 
     const [editingSkill, setEditingSkill] = useState(null)
+
     const [editName, setEditName] = useState('')
+
     const [editCategory, setEditCategory] = useState('')
+
     const [editDescription, setEditDescription] = useState('')
 
+    const [popup, setPopup] = useState({
+        isOpen: false,
+        type: 'info',
+        title: '',
+        message: '',
+        confirmText: 'OK',
+        cancelText: 'Cancel',
+        showCancel: false,
+        onConfirm: null,
+        onCancel: null
+    })
+
+    const [deleteSkillId, setDeleteSkillId] = useState(null)
+
     useEffect(() => {
+
         const storedUser = JSON.parse(localStorage.getItem('user'))
 
         if (storedUser) {
+
             setUser(storedUser)
+
             loadMySkills(storedUser.id)
+
         }
+
     }, [])
 
     async function loadMySkills(userId) {
+
         try {
+
             const response = await fetch(
                 '/api/skills'
             )
@@ -38,19 +66,45 @@ function Profile() {
             setMySkills(userSkills)
 
         } catch (error) {
+
             console.error('Error loading skills:', error)
+
         }
+
+    }
+
+    function closePopup() {
+
+        setPopup(prev => ({
+            ...prev,
+            isOpen: false
+        }))
+
     }
 
     async function handleAddSkill(e) {
+
         e.preventDefault()
 
         if (!skillName || !category || !description) {
-            alert('All fields are required')
+
+            setPopup({
+                isOpen: true,
+                type: 'warning',
+                title: 'Missing Information',
+                message: 'All fields are required.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
             return
         }
 
         try {
+
             const response = await fetch(
                 '/api/skills',
                 {
@@ -70,34 +124,100 @@ function Profile() {
             const data = await response.json()
 
             if (!response.ok) {
-                alert(data.error)
+
+                setPopup({
+                    isOpen: true,
+                    type: 'error',
+                    title: 'Unable to Add Skill',
+                    message: data.error || 'Something went wrong.',
+                    confirmText: 'OK',
+                    cancelText: 'Cancel',
+                    showCancel: false,
+                    onConfirm: closePopup,
+                    onCancel: closePopup
+                })
+
                 return
             }
-
-            alert('Skill added successfully')
 
             setSkillName('')
             setCategory('')
             setDescription('')
 
+            setPopup({
+                isOpen: true,
+                type: 'success',
+                title: 'Skill Added',
+                message: 'Your skill has been added successfully.',
+                confirmText: 'Great',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
             loadMySkills(user.id)
 
         } catch (error) {
+
             console.error('Error adding skill:', error)
-            alert('Unable to connect to server')
+
+            setPopup({
+                isOpen: true,
+                type: 'error',
+                title: 'Connection Error',
+                message: 'Unable to connect to server. Please try again.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
         }
+
     }
 
-    async function handleDeleteSkill(id) {
-        const confirmDelete = window.confirm(
-            'Are you sure you want to delete this skill?'
-        )
+    function handleDeleteSkill(id) {
 
-        if (!confirmDelete) {
+        setDeleteSkillId(id)
+
+        setPopup({
+            isOpen: true,
+            type: 'danger',
+            title: 'Delete Skill?',
+            message: 'Are you sure you want to delete this skill? This action cannot be undone.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            showCancel: true,
+            onConfirm: confirmDeleteSkill,
+            onCancel: cancelDeleteSkill
+        })
+
+    }
+
+    function cancelDeleteSkill() {
+
+        setDeleteSkillId(null)
+
+        closePopup()
+
+    }
+
+    async function confirmDeleteSkill() {
+
+        const id = deleteSkillId
+
+        setDeleteSkillId(null)
+
+        closePopup()
+
+        if (!id) {
             return
         }
 
         try {
+
             const response = await fetch(
                 `/api/skills/${id}`,
                 {
@@ -111,41 +231,101 @@ function Profile() {
             const data = await response.json()
 
             if (!response.ok) {
-                alert(data.error)
+
+                setPopup({
+                    isOpen: true,
+                    type: 'error',
+                    title: 'Delete Failed',
+                    message: data.error || 'Unable to delete this skill.',
+                    confirmText: 'OK',
+                    cancelText: 'Cancel',
+                    showCancel: false,
+                    onConfirm: closePopup,
+                    onCancel: closePopup
+                })
+
                 return
             }
 
-            alert('Skill deleted successfully')
+            setPopup({
+                isOpen: true,
+                type: 'success',
+                title: 'Skill Deleted',
+                message: 'The skill has been deleted successfully.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
 
             loadMySkills(user.id)
 
         } catch (error) {
+
             console.error('Error deleting skill:', error)
-            alert('Unable to connect to server')
+
+            setPopup({
+                isOpen: true,
+                type: 'error',
+                title: 'Connection Error',
+                message: 'Unable to connect to server. Please try again.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
         }
+
     }
 
     function startEditSkill(skill) {
+
         setEditingSkill(skill.id)
+
         setEditName(skill.name)
+
         setEditCategory(skill.category)
+
         setEditDescription(skill.description)
+
     }
 
     function cancelEdit() {
+
         setEditingSkill(null)
+
         setEditName('')
+
         setEditCategory('')
+
         setEditDescription('')
+
     }
 
     async function handleUpdateSkill(id) {
+
         if (!editName || !editCategory || !editDescription) {
-            alert('All fields are required')
+
+            setPopup({
+                isOpen: true,
+                type: 'warning',
+                title: 'Missing Information',
+                message: 'All fields are required.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
             return
         }
 
         try {
+
             const response = await fetch(
                 `/api/skills/${id}`,
                 {
@@ -165,24 +345,62 @@ function Profile() {
             const data = await response.json()
 
             if (!response.ok) {
-                alert(data.error)
+
+                setPopup({
+                    isOpen: true,
+                    type: 'error',
+                    title: 'Update Failed',
+                    message: data.error || 'Unable to update this skill.',
+                    confirmText: 'OK',
+                    cancelText: 'Cancel',
+                    showCancel: false,
+                    onConfirm: closePopup,
+                    onCancel: closePopup
+                })
+
                 return
             }
 
-            alert('Skill updated successfully')
+            setPopup({
+                isOpen: true,
+                type: 'success',
+                title: 'Skill Updated',
+                message: 'Your skill has been updated successfully.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
 
             cancelEdit()
 
             loadMySkills(user.id)
 
         } catch (error) {
+
             console.error('Error updating skill:', error)
-            alert('Unable to connect to server')
+
+            setPopup({
+                isOpen: true,
+                type: 'error',
+                title: 'Connection Error',
+                message: 'Unable to connect to server. Please try again.',
+                confirmText: 'OK',
+                cancelText: 'Cancel',
+                showCancel: false,
+                onConfirm: closePopup,
+                onCancel: closePopup
+            })
+
         }
+
     }
 
     if (!user) {
+
         return (
+
             <main className="profile-page">
 
                 <section className="profile-login-state">
@@ -215,10 +433,13 @@ function Profile() {
                 </section>
 
             </main>
+
         )
+
     }
 
     return (
+
         <main className="profile-page">
 
             {/* =========================================
@@ -248,22 +469,26 @@ function Profile() {
                         </p>
 
                         <div className="profile-status">
+
                             <span></span>
+
                             Active learner
+
                         </div>
 
                     </div>
 
                     <div className="profile-hero-decoration">
+
                         <span>📚</span>
                         <span>💡</span>
                         <span>🚀</span>
+
                     </div>
 
                 </div>
 
             </section>
-
 
             {/* =========================================
                 PROFILE STATS
@@ -278,8 +503,15 @@ function Profile() {
                     </div>
 
                     <div>
-                        <strong>{mySkills.length}</strong>
-                        <span>Skills Shared</span>
+
+                        <strong>
+                            {mySkills.length}
+                        </strong>
+
+                        <span>
+                            Skills Shared
+                        </span>
+
                     </div>
 
                 </div>
@@ -291,8 +523,15 @@ function Profile() {
                     </div>
 
                     <div>
-                        <strong>Student</strong>
-                        <span>Community Member</span>
+
+                        <strong>
+                            Student
+                        </strong>
+
+                        <span>
+                            Community Member
+                        </span>
+
                     </div>
 
                 </div>
@@ -304,14 +543,20 @@ function Profile() {
                     </div>
 
                     <div>
-                        <strong>Learn</strong>
-                        <span>Exchange Knowledge</span>
+
+                        <strong>
+                            Learn
+                        </strong>
+
+                        <span>
+                            Exchange Knowledge
+                        </span>
+
                     </div>
 
                 </div>
 
             </section>
-
 
             {/* =========================================
                 ADD SKILL
@@ -413,7 +658,6 @@ function Profile() {
                 </div>
 
             </section>
-
 
             {/* =========================================
                 MY SKILLS
@@ -577,6 +821,7 @@ function Profile() {
                                         <div className="profile-skill-top">
 
                                             <div className="profile-skill-icon">
+
                                                 {skill.category
                                                     ?.toLowerCase()
                                                     .includes('program')
@@ -594,6 +839,7 @@ function Profile() {
                                                                 .includes('ai')
                                                                 ? '🤖'
                                                                 : '✨'}
+
                                             </div>
 
                                             <span className="profile-skill-category">
@@ -652,7 +898,6 @@ function Profile() {
 
             </section>
 
-
             {/* =========================================
                 BOTTOM MESSAGE
             ========================================= */}
@@ -660,6 +905,7 @@ function Profile() {
             <section className="profile-bottom-message">
 
                 <div>
+
                     <span>
                         KEEP GROWING
                     </span>
@@ -669,6 +915,7 @@ function Profile() {
                         <br />
                         <strong>can help someone grow.</strong>
                     </h2>
+
                 </div>
 
                 <div className="profile-bottom-orbit">
@@ -681,8 +928,22 @@ function Profile() {
 
             </section>
 
+            <Popup
+                isOpen={popup.isOpen}
+                type={popup.type}
+                title={popup.title}
+                message={popup.message}
+                confirmText={popup.confirmText}
+                cancelText={popup.cancelText}
+                showCancel={popup.showCancel}
+                onConfirm={popup.onConfirm || closePopup}
+                onCancel={popup.onCancel || closePopup}
+            />
+
         </main>
+
     )
+
 }
 
 export default Profile

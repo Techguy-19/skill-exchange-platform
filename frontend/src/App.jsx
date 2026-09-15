@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import Navbar from './components/Navbar'
+import Popup from './components/Popup'
 import Home from './pages/home'
 import Skills from './pages/Skills'
 import Requests from './pages/Requests'
@@ -10,9 +11,12 @@ import Profile from './pages/Profile'
 import UserProfile from './pages/UserProfile'
 import Chat from './pages/Chat'
 
+
 function App() {
   return (
     <BrowserRouter>
+
+    
       <Navbar />
 
       <Routes>

@@ -1,6 +1,6 @@
-
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Popup from '../components/Popup'
 
 function Register() {
     const navigate = useNavigate()
@@ -9,16 +9,46 @@ function Register() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
+    const [popup, setPopup] = useState({
+        isOpen: false,
+        type: 'info',
+        title: '',
+        message: '',
+        confirmText: 'OK',
+        onConfirm: null
+    })
+
+    function closePopup() {
+        setPopup(prev => ({
+            ...prev,
+            isOpen: false
+        }))
+    }
+
     async function handleSubmit(e) {
         e.preventDefault()
 
         if (!name || !email || !password) {
-            alert('All fields are required')
+            setPopup({
+                isOpen: true,
+                type: 'warning',
+                title: 'Missing Information',
+                message: 'All fields are required.',
+                confirmText: 'OK',
+                onConfirm: closePopup
+            })
             return
         }
 
         if (password.length < 6) {
-            alert('Password must be at least 6 characters')
+            setPopup({
+                isOpen: true,
+                type: 'warning',
+                title: 'Password Too Short',
+                message: 'Password must be at least 6 characters.',
+                confirmText: 'OK',
+                onConfirm: closePopup
+            })
             return
         }
 
@@ -43,7 +73,14 @@ function Register() {
             console.log('REGISTER RESPONSE:', data)
 
             if (!response.ok) {
-                alert(data.error)
+                setPopup({
+                    isOpen: true,
+                    type: 'error',
+                    title: 'Registration Failed',
+                    message: data.error || 'Unable to create your account.',
+                    confirmText: 'Try Again',
+                    onConfirm: closePopup
+                })
                 return
             }
 
@@ -60,18 +97,34 @@ function Register() {
                 localStorage.getItem('user') ? 'YES' : 'NO'
             )
 
-            alert('Registration successful')
-
             setName('')
             setEmail('')
             setPassword('')
 
-            navigate('/profile')
-            window.location.reload()
+            setPopup({
+                isOpen: true,
+                type: 'success',
+                title: 'Registration Successful',
+                message: 'Your account has been created successfully. Welcome to Skill Exchange!',
+                confirmText: 'Continue',
+                onConfirm: () => {
+                    closePopup()
+                    navigate('/profile')
+                    window.location.reload()
+                }
+            })
 
         } catch (error) {
             console.error('Registration error:', error)
-            alert('Unable to connect to server')
+
+            setPopup({
+                isOpen: true,
+                type: 'error',
+                title: 'Connection Error',
+                message: 'Unable to connect to server. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closePopup
+            })
         }
     }
 
@@ -235,9 +288,17 @@ function Register() {
 
             </section>
 
+            <Popup
+                isOpen={popup.isOpen}
+                type={popup.type}
+                title={popup.title}
+                message={popup.message}
+                confirmText={popup.confirmText}
+                onConfirm={popup.onConfirm || closePopup}
+            />
+
         </main>
     )
 }
 
 export default Register
-

@@ -8176,3 +8176,214 @@ a {
 
 }
 
+
+
+
+
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(8px);
+
+    animation: popupFadeIn 0.2s ease;
+}
+
+.popup-card {
+    width: min(420px, 100%);
+    padding: 28px 26px;
+
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 22px;
+
+    text-align: center;
+
+    box-shadow:
+        0 25px 70px rgba(15, 23, 42, 0.25);
+
+    animation: popupSlideIn 0.25s ease;
+}
+
+.popup-icon {
+    width: 58px;
+    height: 58px;
+
+    margin: 0 auto 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    font-size: 27px;
+    font-weight: 700;
+}
+
+.popup-content h3 {
+    margin: 0 0 8px;
+
+    color: #111827;
+
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.popup-content p {
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.popup-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+
+    margin-top: 24px;
+}
+
+.popup-actions button {
+    min-width: 100px;
+    padding: 11px 18px;
+
+    border: none;
+    border-radius: 11px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.popup-actions button:hover {
+    transform: translateY(-1px);
+}
+
+.popup-confirm-btn {
+    color: white;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+}
+
+.popup-cancel-btn {
+    color: #475569;
+    background: #f1f5f9;
+}
+
+.popup-cancel-btn:hover {
+    background: #e2e8f0;
+}
+
+/* SUCCESS */
+
+.popup-success .popup-icon {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+.popup-success .popup-confirm-btn {
+    background: #16a34a;
+}
+
+/* ERROR */
+
+.popup-error .popup-icon {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.popup-error .popup-confirm-btn {
+    background: #dc2626;
+}
+
+/* WARNING */
+
+.popup-warning .popup-icon {
+    color: #d97706;
+    background: #fef3c7;
+}
+
+.popup-warning .popup-confirm-btn {
+    background: #d97706;
+}
+
+/* INFO */
+
+.popup-info .popup-icon {
+    color: #4f46e5;
+    background: #e0e7ff;
+}
+
+/* DANGER */
+
+.popup-danger .popup-icon {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.popup-danger .popup-confirm-btn {
+    background: #dc2626;
+}
+
+/* ANIMATIONS */
+
+@keyframes popupFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes popupSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+    .popup-card {
+        padding: 24px 20px;
+        border-radius: 18px;
+    }
+
+    .popup-content h3 {
+        font-size: 19px;
+    }
+
+    .popup-actions {
+        flex-direction: column-reverse;
+    }
+
+    .popup-actions button {
+        width: 100%;
+    }
+}
