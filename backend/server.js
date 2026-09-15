@@ -78,10 +78,15 @@ app.get('/api/requests', authenticateToken, async (req, res) => {
   const { data, error } = await supabase
     .from('exchange_requests')
     .select(`
-      id,
-      status,
-      created_at,
-      sender:sender_id (
+    id,
+    status,
+    created_at,
+    accepted_at,
+    rejected_at,
+    sender_chat_hidden,
+    receiver_chat_hidden,
+
+    sender:sender_id (
         id,
         name,
         email
@@ -110,6 +115,10 @@ app.get('/api/requests', authenticateToken, async (req, res) => {
       error: error.message
     })
   }
+
+console.log('BACKEND REQUEST DATA:', data)
+
+
 
   res.json(data)
 })
@@ -289,6 +298,7 @@ app.post('/api/requests', authenticateToken, async (req, res) => {
 })
 
 app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
+
   const { id } = req.params
   const { status } = req.body
 
@@ -298,13 +308,26 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
     })
   }
 
+  const updateData = {
+    status
+  }
+
+  if (status === 'accepted') {
+    updateData.accepted_at = new Date().toISOString()
+    updateData.rejected_at = null
+  }
+
+  if (status === 'rejected') {
+    updateData.rejected_at = new Date().toISOString()
+    updateData.accepted_at = null
+  }
+
   const { data, error } = await supabase
     .from('exchange_requests')
-    .update({
-      status
-    })
+    .update(updateData)
     .eq('id', id)
     .eq('receiver_id', req.user.id)
+    .eq('status', 'pending')
     .select()
 
   if (error) {
@@ -315,12 +338,349 @@ app.put('/api/requests/:id/status', authenticateToken, async (req, res) => {
 
   if (!data || data.length === 0) {
     return res.status(404).json({
-      error: 'Request not found or you are not the receiver'
+      error: 'Request not found, already processed, or you are not the receiver'
     })
   }
 
   res.json(data[0])
 })
+
+
+
+// =========================================
+// CHAT - GET MESSAGES
+// =========================================
+
+app.get('/api/messages/:requestId', authenticateToken, async (req, res) => {
+
+  const { requestId } = req.params
+  const userId = req.user.id
+
+  // Check whether the request exists
+  // and the logged-in user belongs to it
+  const { data: request, error: requestError } = await supabase
+    .from('exchange_requests')
+    .select('id, sender_id, receiver_id, status')
+    .eq('id', requestId)
+    .single()
+
+  if (requestError || !request) {
+    return res.status(404).json({
+      error: 'Exchange request not found'
+    })
+  }
+
+  // Only sender or receiver can access the chat
+  if (
+    request.sender_id !== userId &&
+    request.receiver_id !== userId
+  ) {
+    return res.status(403).json({
+      error: 'You are not part of this exchange'
+    })
+  }
+
+  // Chat allowed only after request is accepted
+  if (request.status !== 'accepted') {
+    return res.status(403).json({
+      error: 'Chat is available only after the request is accepted'
+    })
+  }
+
+ const { data, error } = await supabase
+  .from('messages')
+  .select(`
+    id,
+    request_id,
+    sender_id,
+    receiver_id,
+    message,
+    created_at,
+    edited,
+    edited_at,
+    deleted
+  `)
+  .eq('request_id', requestId)
+  .order('created_at', { ascending: true })
+  if (error) {
+    return res.status(500).json({
+      error: error.message
+    })
+  }
+
+  res.json(data)
+
+})
+
+
+// =========================================
+// CHAT - SEND MESSAGE
+// =========================================
+
+app.post('/api/messages/:requestId', authenticateToken, async (req, res) => {
+
+  const { requestId } = req.params
+  const { message } = req.body
+  const senderId = req.user.id
+
+  if (!message || !message.trim()) {
+    return res.status(400).json({
+      error: 'Message cannot be empty'
+    })
+  }
+
+  // Check exchange request
+  const { data: request, error: requestError } = await supabase
+    .from('exchange_requests')
+    .select('id, sender_id, receiver_id, status')
+    .eq('id', requestId)
+    .single()
+
+  if (requestError || !request) {
+    return res.status(404).json({
+      error: 'Exchange request not found'
+    })
+  }
+
+  // Only sender or receiver can send messages
+  if (
+    request.sender_id !== senderId &&
+    request.receiver_id !== senderId
+  ) {
+    return res.status(403).json({
+      error: 'You are not part of this exchange'
+    })
+  }
+
+  // Chat allowed only after acceptance
+  if (request.status !== 'accepted') {
+    return res.status(403).json({
+      error: 'Chat is available only after the request is accepted'
+    })
+  }
+
+  const receiverId =
+    request.sender_id === senderId
+      ? request.receiver_id
+      : request.sender_id
+
+  const { data, error } = await supabase
+    .from('messages')
+    .insert([
+      {
+        request_id: requestId,
+        sender_id: senderId,
+        receiver_id: receiverId,
+        message: message.trim()
+      }
+    ])
+    .select()
+    .single()
+
+  if (error) {
+    return res.status(500).json({
+      error: error.message
+    })
+  }
+
+  res.status(201).json(data)
+
+})
+
+
+
+
+// =========================================
+// CHAT - HIDE CHAT
+// =========================================
+
+app.put('/api/messages/:requestId/hide', authenticateToken, async (req, res) => {
+
+  const { requestId } = req.params
+  const userId = req.user.id
+
+  const { data: request, error: requestError } = await supabase
+    .from('exchange_requests')
+    .select('id, sender_id, receiver_id')
+    .eq('id', requestId)
+    .single()
+
+  if (requestError || !request) {
+    return res.status(404).json({
+      error: 'Exchange request not found'
+    })
+  }
+
+  let updateData = {}
+
+  if (Number(request.sender_id) === Number(userId)) {
+    updateData.sender_chat_hidden = true
+  } else if (Number(request.receiver_id) === Number(userId)) {
+    updateData.receiver_chat_hidden = true
+  } else {
+    return res.status(403).json({
+      error: 'You are not part of this exchange'
+    })
+  }
+
+  const { data, error } = await supabase
+    .from('exchange_requests')
+    .update(updateData)
+    .eq('id', requestId)
+    .select()
+    .single()
+
+  if (error) {
+    return res.status(500).json({
+      error: error.message
+    })
+  }
+
+  res.json({
+    message: 'Chat hidden successfully',
+    request: data
+  })
+})
+
+
+
+app.put('/api/messages/:requestId/unhide', authenticateToken, async (req, res) => {
+
+  const { requestId } = req.params
+  const userId = req.user.id
+
+  const { data: request, error: requestError } = await supabase
+    .from('exchange_requests')
+    .select('id, sender_id, receiver_id')
+    .eq('id', requestId)
+    .single()
+
+  if (requestError || !request) {
+    return res.status(404).json({
+      error: 'Exchange request not found'
+    })
+  }
+
+  let updateData = {}
+
+  if (Number(request.sender_id) === Number(userId)) {
+    updateData.sender_chat_hidden = false
+  } else if (Number(request.receiver_id) === Number(userId)) {
+    updateData.receiver_chat_hidden = false
+  } else {
+    return res.status(403).json({
+      error: 'You are not part of this exchange'
+    })
+  }
+
+  const { data, error } = await supabase
+    .from('exchange_requests')
+    .update(updateData)
+    .eq('id', requestId)
+    .select()
+    .single()
+
+  if (error) {
+    return res.status(500).json({
+      error: error.message
+    })
+  }
+
+  res.json({
+    message: 'Chat unhidden successfully',
+    request: data
+  })
+})
+
+
+
+
+// =========================================
+// CHAT - EDIT MESSAGE
+// =========================================
+
+app.put('/api/messages/:messageId', authenticateToken, async (req, res) => {
+
+  const { messageId } = req.params
+  const { message } = req.body
+  const userId = req.user.id
+
+  if (!message || !message.trim()) {
+    return res.status(400).json({
+      error: 'Message cannot be empty'
+    })
+  }
+
+  const { data, error } = await supabase
+    .from('messages')
+    .update({
+      message: message.trim(),
+      edited: true,
+      edited_at: new Date().toISOString()
+    })
+    .eq('id', messageId)
+    .eq('sender_id', userId)
+    .eq('deleted', false)
+    .select()
+    .single()
+
+  if (error) {
+    return res.status(500).json({
+      error: error.message
+    })
+  }
+
+  if (!data) {
+    return res.status(404).json({
+      error: 'Message not found or you are not the sender'
+    })
+  }
+
+  res.json(data)
+})
+
+
+// =========================================
+// CHAT - DELETE MESSAGE
+// =========================================
+
+app.delete('/api/messages/:messageId', authenticateToken, async (req, res) => {
+
+  const { messageId } = req.params
+  const userId = req.user.id
+
+  const { data, error } = await supabase
+    .from('messages')
+    .update({
+      deleted: true
+    })
+    .eq('id', messageId)
+    .eq('sender_id', userId)
+    .select()
+    .single()
+
+  if (error) {
+    return res.status(500).json({
+      error: error.message
+    })
+  }
+
+  if (!data) {
+    return res.status(404).json({
+      error: 'Message not found or you are not the sender'
+    })
+  }
+
+  res.json({
+    message: 'Message deleted successfully',
+    data
+  })
+})
+
+
+
+
+
 
 app.post('/api/auth/register', async (req, res) => {
   const { name, email, password } = req.body

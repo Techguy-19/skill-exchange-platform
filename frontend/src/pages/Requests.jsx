@@ -1,23 +1,30 @@
 
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 function Requests() {
+
+    const navigate = useNavigate()
+
     const [requests, setRequests] = useState([])
+    const [selectedRequest, setSelectedRequest] = useState(null)
 
     const currentUser = JSON.parse(localStorage.getItem('user'))
     const token = localStorage.getItem('token')
 
     async function loadRequests() {
+
         if (!token) {
             return
         }
 
         try {
+
             const response = await fetch(
                 '/api/requests',
                 {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        Authorization: `Bearer ${token}`
                     }
                 }
             )
@@ -29,10 +36,30 @@ function Requests() {
                 return
             }
 
+            // Debug hidden chat values
+            console.log(
+                'HIDDEN FLAGS:',
+                data.map(request => ({
+                    id: request.id,
+                    status: request.status,
+                    sender_chat_hidden:
+                        request.sender_chat_hidden,
+                    receiver_chat_hidden:
+                        request.receiver_chat_hidden
+                }))
+            )
+
+            // IMPORTANT:
+            // Request cards ko display karne ke liye ye required hai
             setRequests(data)
 
         } catch (error) {
-            console.error('Error fetching requests:', error)
+
+            console.error(
+                'Error fetching requests:',
+                error
+            )
+
         }
     }
 
@@ -41,15 +68,19 @@ function Requests() {
     }, [])
 
     async function updateStatus(id, status) {
+
         try {
+
             const response = await fetch(
                 `/api/requests/${id}/status`,
                 {
                     method: 'PUT',
+
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        Authorization: `Bearer ${token}`
                     },
+
                     body: JSON.stringify({
                         status
                     })
@@ -69,15 +100,24 @@ function Requests() {
                     : 'Request rejected successfully'
             )
 
+            setSelectedRequest(null)
+
             loadRequests()
 
         } catch (error) {
-            console.error('Error updating request:', error)
+
+            console.error(
+                'Error updating request:',
+                error
+            )
+
             alert('Unable to connect to server')
+
         }
     }
 
     function getStatusClass(status) {
+
         if (status === 'accepted') {
             return 'request-status accepted'
         }
@@ -90,6 +130,7 @@ function Requests() {
     }
 
     function getStatusIcon(status) {
+
         if (status === 'accepted') {
             return '✓'
         }
@@ -102,7 +143,9 @@ function Requests() {
     }
 
     if (!currentUser) {
+
         return (
+
             <main className="requests-page">
 
                 <section className="requests-login-state">
@@ -128,9 +171,11 @@ function Requests() {
                     </p>
 
                     <a href="/login">
+
                         <button className="requests-login-btn">
                             Login to Continue →
                         </button>
+
                     </a>
 
                 </section>
@@ -140,6 +185,7 @@ function Requests() {
     }
 
     return (
+
         <main className="requests-page">
 
             {/* =========================================
@@ -184,14 +230,20 @@ function Requests() {
 
                     <div className="requests-hero-circle">
 
-                        <span>LEARN</span>
-                        <strong>TOGETHER</strong>
+                        <span>
+                            LEARN
+                        </span>
+
+                        <strong>
+                            TOGETHER
+                        </strong>
 
                     </div>
 
                 </div>
 
             </section>
+
 
             {/* =========================================
                 REQUEST SUMMARY
@@ -206,11 +258,19 @@ function Requests() {
                     </div>
 
                     <div>
-                        <strong>{requests.length}</strong>
-                        <span>Total Requests</span>
+
+                        <strong>
+                            {requests.length}
+                        </strong>
+
+                        <span>
+                            Total Requests
+                        </span>
+
                     </div>
 
                 </div>
+
 
                 <div className="request-summary-card">
 
@@ -219,19 +279,24 @@ function Requests() {
                     </div>
 
                     <div>
+
                         <strong>
                             {
                                 requests.filter(
-                                    (request) =>
+                                    request =>
                                         request.status === 'pending'
                                 ).length
                             }
                         </strong>
 
-                        <span>Pending</span>
+                        <span>
+                            Pending
+                        </span>
+
                     </div>
 
                 </div>
+
 
                 <div className="request-summary-card">
 
@@ -240,19 +305,24 @@ function Requests() {
                     </div>
 
                     <div>
+
                         <strong>
                             {
                                 requests.filter(
-                                    (request) =>
+                                    request =>
                                         request.status === 'accepted'
                                 ).length
                             }
                         </strong>
 
-                        <span>Accepted</span>
+                        <span>
+                            Accepted
+                        </span>
+
                     </div>
 
                 </div>
+
 
                 <div className="request-summary-card">
 
@@ -261,21 +331,26 @@ function Requests() {
                     </div>
 
                     <div>
+
                         <strong>
                             {
                                 requests.filter(
-                                    (request) =>
+                                    request =>
                                         request.status === 'rejected'
                                 ).length
                             }
                         </strong>
 
-                        <span>Rejected</span>
+                        <span>
+                            Rejected
+                        </span>
+
                     </div>
 
                 </div>
 
             </section>
+
 
             {/* =========================================
                 REQUEST LIST
@@ -286,13 +361,17 @@ function Requests() {
                 <div className="requests-section-heading">
 
                     <div>
-                        <span>YOUR CONNECTIONS</span>
+
+                        <span>
+                            YOUR CONNECTIONS
+                        </span>
 
                         <h2>
                             Skill exchange
                             <br />
                             <strong>requests.</strong>
                         </h2>
+
                     </div>
 
                     <p>
@@ -301,6 +380,7 @@ function Requests() {
                     </p>
 
                 </div>
+
 
                 {requests.length === 0 ? (
 
@@ -320,9 +400,11 @@ function Requests() {
                         </p>
 
                         <a href="/skills">
+
                             <button className="browse-skills-btn">
                                 Explore Skills →
                             </button>
+
                         </a>
 
                     </div>
@@ -334,15 +416,21 @@ function Requests() {
                         {requests.map((request) => {
 
                             const isReceiver =
-                                request.receiver.id === currentUser.id
+                                Number(request.receiver.id) ===
+                                Number(currentUser.id)
 
                             const isSender =
-                                request.sender.id === currentUser.id
+                                Number(request.sender.id) ===
+                                Number(currentUser.id)
 
                             return (
+
                                 <article
                                     className="request-card"
                                     key={request.id}
+                                    onClick={() =>
+                                        setSelectedRequest(request)
+                                    }
                                 >
 
                                     {/* Card top */}
@@ -356,6 +444,7 @@ function Requests() {
                                             </span>
 
                                             <div>
+
                                                 <span>
                                                     SKILL EXCHANGE
                                                 </span>
@@ -365,15 +454,18 @@ function Requests() {
                                                         ? 'Incoming Request'
                                                         : 'Your Request'}
                                                 </strong>
+
                                             </div>
 
                                         </div>
+
 
                                         <div
                                             className={getStatusClass(
                                                 request.status
                                             )}
                                         >
+
                                             <span>
                                                 {getStatusIcon(
                                                     request.status
@@ -381,9 +473,11 @@ function Requests() {
                                             </span>
 
                                             {request.status}
+
                                         </div>
 
                                     </div>
+
 
                                     {/* People */}
 
@@ -392,12 +486,15 @@ function Requests() {
                                         <div className="request-person">
 
                                             <div className="request-avatar">
+
                                                 {request.sender.name
                                                     ?.charAt(0)
                                                     .toUpperCase()}
+
                                             </div>
 
                                             <div>
+
                                                 <span>
                                                     FROM
                                                 </span>
@@ -405,23 +502,29 @@ function Requests() {
                                                 <strong>
                                                     {request.sender.name}
                                                 </strong>
+
                                             </div>
 
                                         </div>
+
 
                                         <div className="request-arrow">
                                             →
                                         </div>
 
+
                                         <div className="request-person">
 
                                             <div className="request-avatar">
+
                                                 {request.receiver.name
                                                     ?.charAt(0)
                                                     .toUpperCase()}
+
                                             </div>
 
                                             <div>
+
                                                 <span>
                                                     TO
                                                 </span>
@@ -429,11 +532,13 @@ function Requests() {
                                                 <strong>
                                                     {request.receiver.name}
                                                 </strong>
+
                                             </div>
 
                                         </div>
 
                                     </div>
+
 
                                     {/* Exchange */}
 
@@ -456,9 +561,11 @@ function Requests() {
 
                                         </div>
 
+
                                         <div className="exchange-symbol">
                                             ⇄
                                         </div>
+
 
                                         <div className="exchange-skill requested">
 
@@ -479,6 +586,7 @@ function Requests() {
 
                                     </div>
 
+
                                     {/* Footer */}
 
                                     <div className="request-card-footer">
@@ -486,7 +594,9 @@ function Requests() {
                                         <div className="request-role">
 
                                             {isReceiver ? (
+
                                                 <>
+
                                                     <span>
                                                         Someone wants to
                                                         learn from you
@@ -495,9 +605,13 @@ function Requests() {
                                                     <strong>
                                                         Review this request
                                                     </strong>
+
                                                 </>
+
                                             ) : (
+
                                                 <>
+
                                                     <span>
                                                         Waiting for response
                                                     </span>
@@ -505,49 +619,24 @@ function Requests() {
                                                     <strong>
                                                         Your request has been sent
                                                     </strong>
+
                                                 </>
+
                                             )}
 
                                         </div>
 
-                                        {isReceiver &&
-                                            request.status === 'pending' && (
 
-                                                <div className="request-actions">
-
-                                                    <button
-                                                        className="accept-request-btn"
-                                                        onClick={() =>
-                                                            updateStatus(
-                                                                request.id,
-                                                                'accepted'
-                                                            )
-                                                        }
-                                                    >
-                                                        ✓ Accept
-                                                    </button>
-
-                                                    <button
-                                                        className="reject-request-btn"
-                                                        onClick={() =>
-                                                            updateStatus(
-                                                                request.id,
-                                                                'rejected'
-                                                            )
-                                                        }
-                                                    >
-                                                        × Reject
-                                                    </button>
-
-                                                </div>
-
-                                            )}
+                                        {/* Accept/Reject intentionally
+                                            removed from card */}
 
                                         {isSender &&
                                             request.status === 'pending' && (
 
                                                 <div className="waiting-badge">
+
                                                     ⏳ Waiting for response
+
                                                 </div>
 
                                             )}
@@ -555,7 +644,9 @@ function Requests() {
                                     </div>
 
                                 </article>
+
                             )
+
                         })}
 
                     </div>
@@ -563,6 +654,338 @@ function Requests() {
                 )}
 
             </section>
+
+
+            {/* =========================================
+                REQUEST MODAL
+            ========================================= */}
+
+            {selectedRequest && (
+
+                <div
+                    className="request-modal-overlay"
+                    onClick={() =>
+                        setSelectedRequest(null)
+                    }
+                >
+
+                    <div
+                        className="request-modal"
+                        onClick={(e) =>
+                            e.stopPropagation()
+                        }
+                    >
+
+                        <button
+                            className="request-modal-close"
+                            onClick={() =>
+                                setSelectedRequest(null)
+                            }
+                        >
+                            ×
+                        </button>
+
+
+                        <h2>
+                            Skill Exchange Request
+                        </h2>
+
+
+                        <p>
+
+                            <strong>
+                                From:
+                            </strong>{' '}
+
+                            {selectedRequest.sender.name}
+
+                        </p>
+
+
+                        <p>
+
+                            <strong>
+                                To:
+                            </strong>{' '}
+
+                            {selectedRequest.receiver.name}
+
+                        </p>
+
+
+                        <p>
+
+                            <strong>
+                                Offering:
+                            </strong>{' '}
+
+                            {selectedRequest.offered_skill.name}
+
+                        </p>
+
+
+                        <p>
+
+                            <strong>
+                                Requesting:
+                            </strong>{' '}
+
+                            {selectedRequest.requested_skill.name}
+
+                        </p>
+
+
+                        <p>
+
+                            <strong>
+                                Status:
+                            </strong>{' '}
+
+                            {selectedRequest.status}
+
+                        </p>
+
+
+                        <p>
+
+                            <strong>
+                                Sent:
+                            </strong>{' '}
+
+                            {new Date(
+                                selectedRequest.created_at
+                            ).toLocaleString()}
+
+                        </p>
+
+
+                        {selectedRequest.accepted_at && (
+
+                            <p>
+
+                                <strong>
+                                    Accepted:
+                                </strong>{' '}
+
+                                {new Date(
+                                    selectedRequest.accepted_at
+                                ).toLocaleString()}
+
+                            </p>
+
+                        )}
+
+
+                        {selectedRequest.rejected_at && (
+
+                            <p>
+
+                                <strong>
+                                    Rejected:
+                                </strong>{' '}
+
+                                {new Date(
+                                    selectedRequest.rejected_at
+                                ).toLocaleString()}
+
+                            </p>
+
+                        )}
+
+
+                        {/* =========================================
+                            ACCEPT / REJECT
+                            ONLY PENDING INCOMING REQUEST
+                        ========================================= */}
+
+                        {Number(selectedRequest.receiver.id) ===
+                            Number(currentUser.id) &&
+                            selectedRequest.status === 'pending' && (
+
+                                <div className="request-actions">
+
+                                    <button
+                                        className="accept-request-btn"
+                                        onClick={(e) => {
+
+                                            e.stopPropagation()
+
+                                            updateStatus(
+                                                selectedRequest.id,
+                                                'accepted'
+                                            )
+
+                                        }}
+                                    >
+                                        ✓ Accept
+                                    </button>
+
+
+                                    <button
+                                        className="reject-request-btn"
+                                        onClick={(e) => {
+
+                                            e.stopPropagation()
+
+                                            updateStatus(
+                                                selectedRequest.id,
+                                                'rejected'
+                                            )
+
+                                        }}
+                                    >
+                                        × Reject
+                                    </button>
+
+                                </div>
+
+                            )}
+
+
+                        {/* =========================================
+                            ACCEPTED REQUEST
+                            CHAT STATUS
+                        ========================================= */}
+
+                        {selectedRequest.status === 'accepted' && (
+
+                            (() => {
+
+                                const isSender =
+                                    Number(selectedRequest.sender.id) ===
+                                    Number(currentUser.id)
+
+                                const chatHidden = isSender
+                                    ? selectedRequest.sender_chat_hidden === true
+                                    : selectedRequest.receiver_chat_hidden === true
+
+                                console.log(
+                                    'SELECTED REQUEST CHAT CHECK:',
+                                    {
+                                        requestId: selectedRequest.id,
+                                        isSender,
+                                        sender_chat_hidden:
+                                            selectedRequest.sender_chat_hidden,
+                                        receiver_chat_hidden:
+                                            selectedRequest.receiver_chat_hidden,
+                                        chatHidden
+                                    }
+                                )
+
+
+                                if (chatHidden) {
+                                    return (
+                                        <div className="chat-hidden-section">
+
+                                            <div className="chat-hidden-message">
+                                                🔕 Chat hidden
+                                            </div>
+
+                                            <button
+                                                className="unhide-chat-btn"
+                                                onClick={async () => {
+
+                                                    try {
+
+                                                        const response = await fetch(
+                                                            `/api/messages/${selectedRequest.id}/unhide`,
+                                                            {
+                                                                method: 'PUT',
+                                                                headers: {
+                                                                    Authorization: `Bearer ${token}`
+                                                                }
+                                                            }
+                                                        )
+
+                                                        const data = await response.json()
+
+                                                        if (!response.ok) {
+                                                            throw new Error(
+                                                                data.error || 'Failed to unhide chat'
+                                                            )
+                                                        }
+
+                                                        // Update current request
+                                                        setSelectedRequest(prev => ({
+                                                            ...prev,
+                                                            sender_chat_hidden:
+                                                                isSender
+                                                                    ? false
+                                                                    : prev.sender_chat_hidden,
+                                                            receiver_chat_hidden:
+                                                                isSender
+                                                                    ? prev.receiver_chat_hidden
+                                                                    : false
+                                                        }))
+
+                                                        // Update request list
+                                                        setRequests(prev =>
+                                                            prev.map(request =>
+                                                                request.id === selectedRequest.id
+                                                                    ? {
+                                                                        ...request,
+                                                                        sender_chat_hidden:
+                                                                            isSender
+                                                                                ? false
+                                                                                : request.sender_chat_hidden,
+                                                                        receiver_chat_hidden:
+                                                                            isSender
+                                                                                ? request.receiver_chat_hidden
+                                                                                : false
+                                                                    }
+                                                                    : request
+                                                            )
+                                                        )
+
+                                                    } catch (error) {
+
+                                                        alert(error.message)
+
+                                                    }
+
+                                                }}
+                                            >
+                                                ↩️ Unhide Chat
+                                            </button>
+
+                                        </div>
+                                    )
+                                }
+
+
+
+                                return (
+
+                                    <div className="chat-button-wrapper">
+
+                                        <button
+                                            className="open-chat-btn"
+                                            onClick={() => {
+
+                                                navigate(
+                                                    `/chat/${selectedRequest.id}`
+                                                )
+
+                                                setSelectedRequest(null)
+
+                                            }}
+                                        >
+                                            💬 Open Chat
+                                        </button>
+
+                                    </div>
+
+                                )
+
+                            })()
+
+                        )}
+
+                    </div>
+
+                </div>
+
+            )}
 
         </main>
     )
