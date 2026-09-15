@@ -47,7 +47,7 @@ function Login() {
             setPassword('')
 
             navigate('/profile')
-            window.location.reload()
+        
 
         } catch (error) {
             console.error('Login error:', error)
