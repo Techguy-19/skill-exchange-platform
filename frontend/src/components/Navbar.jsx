@@ -57,7 +57,7 @@ function Navbar() {
                     className="navbar-logo"
                     onClick={closeMenu}
                 >
-                    <span>Skill</span> Exchange
+                    <span>Skill</span> 🤝 Mitra
                 </Link>
 
                 <button

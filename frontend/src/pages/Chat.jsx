@@ -100,6 +100,17 @@ function Chat() {
     }, [requestId])
 
 
+useEffect(() => {
+    const interval = setInterval(() => {
+        loadMessages()
+    }, 2000)
+
+    return () => {
+        clearInterval(interval)
+    }
+}, [requestId])
+
+
     // =========================================
     // SEND MESSAGE
     // =========================================
