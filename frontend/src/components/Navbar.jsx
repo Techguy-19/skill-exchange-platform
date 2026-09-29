@@ -29,22 +29,35 @@ function Navbar() {
     }
 
     function handleLogout() {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-
         closeMenu()
 
         setPopup({
             isOpen: true,
-            type: 'success',
-            title: 'Logged Out',
-            message: 'You have been logged out successfully.',
+            type: 'warning',
+            title: 'Logout',
+            message: 'Are you sure you want to logout?',
             confirmText: 'Continue',
+            cancelText: 'Cancel',
+            showCancel: true,
             onConfirm: () => {
-                closePopup()
-                navigate('/login')
-                window.location.reload()
-            }
+                localStorage.removeItem('token')
+                localStorage.removeItem('user')
+
+                setPopup({
+                    isOpen: true,
+                    type: 'success',
+                    title: 'Logged Out',
+                    message: 'You have been logged out successfully.',
+                    confirmText: 'Continue',
+                    showCancel: false,
+                    onConfirm: () => {
+                        closePopup()
+                        navigate('/login')
+                        window.location.reload()
+                    }
+                })
+            },
+            onCancel: closePopup
         })
     }
 
@@ -117,7 +130,10 @@ function Navbar() {
                 title={popup.title}
                 message={popup.message}
                 confirmText={popup.confirmText}
+                cancelText={popup.cancelText}
+                showCancel={popup.showCancel}
                 onConfirm={popup.onConfirm || closePopup}
+                onCancel={popup.onCancel || closePopup}
             />
         </>
     )
