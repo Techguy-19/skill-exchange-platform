@@ -2,6 +2,55 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Popup from '../components/Popup'
 
+function getSkillIcon(category = '', skillName = '') {
+
+    const text = `${category} ${skillName}`.toLowerCase()
+
+    const iconMap = [
+        [['cook', 'food', 'baking', 'chef'], '🍳'],
+        [['garden', 'plant', 'farming'], '🌱'],
+        [['program', 'coding', 'software', 'computer', 'python', 'java'], '💻'],
+        [['web', 'html', 'css', 'frontend', 'backend'], '🌐'],
+        [['design', 'ui', 'ux', 'graphic'], '🎨'],
+        [['business', 'startup', 'entrepreneur'], '💼'],
+        [['marketing', 'advertising', 'social media'], '📣'],
+        [['growth', 'analytics', 'management'], '📈'],
+        [['ai', 'artificial intelligence', 'machine learning'], '🤖'],
+        [['photo', 'photography', 'camera'], '📷'],
+        [['video', 'editing', 'film'], '🎬'],
+        [['music', 'singing', 'guitar', 'piano'], '🎵'],
+        [['dance'], '💃'],
+        [['fitness', 'gym', 'workout', 'exercise'], '🏋️'],
+        [['yoga', 'meditation'], '🧘'],
+        [['drawing', 'painting', 'sketch', 'art'], '🖌️'],
+        [['writing', 'writer', 'content'], '✍️'],
+        [['english', 'language', 'communication'], '🗣️'],
+        [['math', 'mathematics'], '🔢'],
+        [['science', 'physics', 'chemistry', 'biology'], '🔬'],
+        [['teaching', 'teacher', 'education'], '👨‍🏫'],
+        [['gaming', 'game', 'esports'], '🎮'],
+        [['finance', 'money', 'stock', 'trading'], '💰'],
+        [['chess'], '♟️'],
+        [['car', 'automobile', 'mechanic', 'repair'], '🚗'],
+        [['makeup', 'beauty', 'cosmetic'], '💄'],
+        [['travel', 'tourism'], '✈️'],
+        [['fashion', 'clothing'], '👗'],
+        [['driving'], '🚘'],
+        [['craft', 'handmade'], '🧵'],
+        [['reading', 'book'], '📚']
+    ]
+
+    for (const [keywords, icon] of iconMap) {
+        if (keywords.some(keyword => text.includes(keyword))) {
+            return icon
+        }
+    }
+
+    return '⭐'
+}
+
+
+
 function Skills() {
 
     const [skills, setSkills] = useState([])
@@ -434,27 +483,8 @@ function Skills() {
                                     <div className="skill-card-top">
 
                                         <div className="skill-icon">
-
-                                            {skill.category
-                                                ?.toLowerCase()
-                                                .includes('program')
-                                                ? '💻'
-                                                : skill.category
-                                                    ?.toLowerCase()
-                                                    .includes('design')
-                                                    ? '🎨'
-                                                    : skill.category
-                                                        ?.toLowerCase()
-                                                        .includes('business')
-                                                        ? '📈'
-                                                        : skill.category
-                                                            ?.toLowerCase()
-                                                            .includes('ai')
-                                                            ? '🤖'
-                                                            : '✨'}
-
+                                            {getSkillIcon(skill.category, skill.name)}
                                         </div>
-
                                         <span className="skill-category">
                                             {skill.category}
                                         </span>

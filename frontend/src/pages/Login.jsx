@@ -8,6 +8,7 @@ function Login() {
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
 
     const [popup, setPopup] = useState({
         isOpen: false,
@@ -192,7 +193,7 @@ function Login() {
                                 </span>
 
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     placeholder="Enter your password"
                                     value={password}
                                     onChange={(e) =>
@@ -200,8 +201,16 @@ function Login() {
                                     }
                                 />
 
-                            </div>
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    {showPassword ? '🙈' : '👁️'}
+                                </button>
 
+                            </div>
                         </div>
 
                         <button
